@@ -21,6 +21,7 @@ class WebcamVideoStream:
     def start(self, src, width=None, height=None, fps=None):
         # initialize the video camera stream and read the first frame
         self.vid = cv2.VideoCapture(src, cv2.CAP_V4L2)
+        
         if not self.vid.isOpened():
             # camera failed
             print('THE camera could not be opened', datetime.now())
@@ -74,10 +75,13 @@ class WebcamVideoStream:
             self.vid.release()
         return
 
-class TimeStampedFrame:
-    def __init__(self, frame, timestamp):
-        self.frame = frame
-        self.timestamp = timestamp
+
+
+
+
+
+
+
 
 class VideoQueueThread(threading.Thread):
     def __init__(self, video_path):
@@ -117,7 +121,78 @@ class VideoQueueThread(threading.Thread):
         self.stopped = True
 
 
+class TimeStampedFrame:
+    def __init__(self, frame, timestamp, count):
+        self.frame = frame
+        self.timestamp = timestamp
+        self.count = count
+        
+class FlashVideoQueueThread(threading.Thread):
+    "Streams a set of consecutive frames at every N seconds interval"
+    
+    def __init__(self, video_path):
+        threading.Thread.__init__(self)
+        self.video_path = video_path
+        self.queue = Queue(maxsize=500)
+        self.stopped = False
+        
+        self.frame_grab_interval = frame_grab_interval
+        self.n_consec_frms = num_consec_frames
+        self.stop_queuing = False
+        
+        #self.stream_params = stream_params
 
+    def cam_intialization(self, stream_params):
+        self.video_cap = cv2.VideoCapture(self.videopath)
+        
+        self.video_cap.set(3,stream_params['width'])
+        self.video_cap.set(4,stream_params['height'])
+        self.video_cap.set(5,stream_params['fps'])
+        
+        if not self.video_cap.isOpened():
+            # camera failed
+            print('The camera could not be opened', datetime.now(), 'at', self.video_path)
+            raise IOError(("Couldn't open video file or webcam at", str(datetime.now())))
+            
+        print("Starting video stream with shape and fps: {},{},{}".format(self.video_cap.get(3), self.video_cap.get(4), self.video_cap.get(5)))
+        
+    
+    def cam_stream(self, frame_grab_interval, num_consec_frames):
+        
+        start_time = time.time()
+        frame_grab = True
+        count = 0
+        while not self.stop_queuing:
+            current_time = time.time()
+            if frame_grab_event(current_time, start_time, frame_grab_interval) and frame_grab:
+                for i in range(num_consec_frames)
+                    ret, frame = self.video_cap.read()
+                    timestamp = datetime.now()
+                    if ret:
+                        self.queue.put(TimeStampedFrame(frame, timestamp, count))
+                        count = count+1
+                    else:
+                        self.video_cap.release()
+                        self.stop_queuing = True
+                        print('Corrupt frame, could not be opened', datetime.now(), self.video_path)
+                        raise IOError(("Couldn't open video frame.", str(datetime.now())))
+        
+        self.video_cap.release()
+
+    def cam_grab_a_frame(self):
+        
+        ret, frame = self.video_cap.read()
+        timestamp = datetime.now()
+        if ret:
+            return TimeStampedFrame(frame, timestamp, count=None)
+        else:
+            self.video_cap.release()
+            print('Corrupt frame, could not be opened', datetime.now())
+            raise IOError(("Couldn't open video frame.", str(datetime.now())))
+            return None
+        
+    def cam_stop(self):
+        self.stop_queuing = True
         
 def frame_write(q, frm_count):
 	idx = cam_id()
