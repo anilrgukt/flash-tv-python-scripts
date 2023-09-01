@@ -58,7 +58,7 @@ class FaceModelv4():
         offH = 0 
         if h < self.small_face_size:
             offH = self.face_padding        
-            
+        
         # small face padding
         det_off2 = det_off.add_offset(offset_hw=[offH, offW])
         det_off2 = Bbox(det_off2)
@@ -67,7 +67,6 @@ class FaceModelv4():
         face = frame[bbox['top']:bbox['bottom'], bbox['left']:bbox['right'], :]
         
         bbox = Bbox(bbox)
-        
         return face, bbox
         
     def resize_face(self, face, bbx):

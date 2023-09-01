@@ -33,8 +33,8 @@ class Bbox():
         return A
     
     def assert_ltrb(self, resolution_hw):
-        W = resolution_hw[0]
-        H = resolution_hw[1]
+        H = resolution_hw[0]
+        W = resolution_hw[1]
         
         l,t,r,b = self.l,self.t,self.r,self.b
         
@@ -54,7 +54,7 @@ class Bbox():
         return bbox 
                 
     def return_dict(self):
-        return {'left':self.l,'top':self.t,'right':self.r,'bottom':self.b}
+        return {'left':self.l,'top':self.t,'right':self.r,'bottom':self.b, 'prob':self.prob, 'lmarks': self.lmarks}
         
     def add_offset(self, offset_hw):
         l,t,r,b = self.l,self.t,self.r,self.b

@@ -6,7 +6,7 @@ import math
 from skimage.transform import resize
 from imageio import imread, imsave
 
-def draw_rect_det(img, dboxes, save_file, draw_lmarks=False):
+def draw_rect_det(img, dboxes, save_file, draw_lmarks=True):
     cv_img = np.copy(img)
     tmp_channel = np.copy(cv_img[:,:,0])
     cv_img[:,:,0] = cv_img[:,:,2]
@@ -48,10 +48,10 @@ def draw_rect_ver(img, dboxes1, dboxes2, save_file):
         for i, dbox in enumerate(dboxes2):
    	        cv2.rectangle(cv_img, (int(dbox["left"])+2, int(dbox["top"])+2), (int(dbox["right"])+2, int(dbox["bottom"])+2), (0,255,0), 1) 
 
-    cv2.imwrite(save_file, cv_img)
+    #cv2.imwrite(save_file, cv_img)
     return cv_img
 
-def draw_gz(frm, gaze_angle, bbx, save_path):
+def draw_gz(frm, gaze_angle, bbx, save_path, gz_label=None, write_img=False):
 
     s0 = gaze_angle[0,0]
     s1 = gaze_angle[0,1]
@@ -59,17 +59,40 @@ def draw_gz(frm, gaze_angle, bbx, save_path):
     sx = (bbx['left'] + bbx['right'])/2 # 
     sy = (bbx['top'] + bbx['bottom'])/2
     
-    x = math.cos(s1)*math.sin(s0) # -40*
-    y = math.sin(s1) # -40*
+    x = -40*math.cos(s1)*math.sin(s0) # -40*
+    y = -40*math.sin(s1) # -40*
     z = -math.cos(s1)*math.cos(s0)    
     
     start, end = (int(sx),int(sy)), (int(sx+x),int(sy+y))
     
     cv_img = frm[:,:,::-1]
-    cv2.arrowedLine(cv_img, start, end, (0,0,255), 3, tipLength=0.5) 
-    cv2.imwrite(save_path, cv_img)
+    
+    colors = [(255,0,0),(0,255,0)]
+    if gz_label is not None:
+        cv2.arrowedLine(cv_img, start, end, colors[gz_label], 3, tipLength=0.5) 
+    else:
+        cv2.arrowedLine(cv_img, start, end, (0,0,255), 3, tipLength=0.5) 
+    
+    if write_img:
+        cv2.imwrite(save_path, cv_img)
     
     return cv_img
+
+def draw_gzbox(frm, gaze_angle, dbox, save_path, gz_label=None, write_img=False):
+
+    cv_img = frm[:,:,::-1]
+    
+    colors = [(255,0,0),(0,255,0)]
+    if gz_label is not None:
+        #cv2.arrowedLine(cv_img, start, end, colors[gz_label], 3, tipLength=0.5) 
+        cv2.rectangle(cv_img, (int(dbox["left"]), int(dbox["top"])), (int(dbox["right"]), int(dbox["bottom"])), colors[gz_label], 2) 
+    else:
+        raise 'Gaze label should be input'
+    
+    if write_img:
+        cv2.imwrite(save_path, cv_img)
+    
+    return cv_img    
     
 #draw_rect_gz(batch10_img608[i], (int(sx),int(sy)), (int(sx+x),int(sy+y)), color, os.path.join(BASE_PATH_IMG,output_name))
 def draw_rect_gz(img, frm, start, end, color, save_file):

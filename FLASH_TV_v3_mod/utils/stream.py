@@ -25,6 +25,8 @@ class WebcamVideoStream:
     def start(self, src, width=None, height=None, fps=None):
         # initialize the video camera stream and read the first frame
         self.vid = cv2.VideoCapture(src, cv2.CAP_V4L2)
+        codec = cv2.VideoWriter_fourcc('M','J','P','G')
+        self.vid.set(6, codec)
         
         if not self.vid.isOpened():
             # camera failed
@@ -60,6 +62,8 @@ class WebcamVideoStream:
             while self.running:
                 # otherwise, read the next frame from the stream
                 self.ret, self.frame = self.vid.read()
+                #if not self.ret:
+                #   raise 'bad frame error'
         except:
             import traceback
             traceback.print_exc()

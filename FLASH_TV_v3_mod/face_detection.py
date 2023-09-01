@@ -3,7 +3,7 @@ import cv2
 import numpy as np 
 
 # face detection libs
-det_path_loc = '/home/flashsys1/insightface/detection/RetinaFace'
+det_path_loc = '/home/flashsys007/insightface/detection/RetinaFace'
 sys.path.insert(1, det_path_loc)
 from retinaface import RetinaFace
 
@@ -15,8 +15,8 @@ class FlashFaceDetector():
 		self.out_hw = output_hw
 		self.det_hw = detector_hw
 		gpuid=0
-		self.detector = RetinaFace('/home/flashsys1/insightface/detection/RetinaFace/model/retina', 0, gpuid, 'net3', vote=False)
-		self.det_path_loc = '/home/flashsys1/insightface/detection/RetinaFace'
+		self.detector = RetinaFace('/home/flashsys007/insightface/detection/RetinaFace/model/retina', 0, gpuid, 'net3', vote=False)
+		self.det_path_loc = '/home/flashsys007/insightface/detection/RetinaFace'
 		
 		self.hw_scale = [self.out_hw[i]/self.det_hw[i] for i in range(2)]
 		self.det_scales = [1.0] # perform detection at scales x det_hw

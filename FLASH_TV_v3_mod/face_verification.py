@@ -15,7 +15,7 @@ import net
 
 adaface_models = {
     #'ir_50':"pretrained/adaface_ir50_ms1mv2.ckpt",
-    'ir_101':"/home/flashsys1/Desktop/FLASH_TV_v3/AdaFace/pretrained/adaface_ir101_webface12m.ckpt",
+    'ir_101':"/home/flashsys007/Desktop/FLASH_TV_v3/AdaFace/pretrained/adaface_ir101_webface12m.ckpt",
 }
 
 def load_pretrained_model(architecture='ir_101'):
@@ -45,7 +45,7 @@ class FLASHFaceVerification():
         brg_img = ((rgb_image[:,:,:,::-1] / 255.) - 0.5) / 0.5 # h,w,3 --> B,h,w,3
         #tensor = torch.tensor(brg_img.transpose(0,3,1,2)).float() # 3,h,w --> B,c,h,w
         brg_img = brg_img.transpose(0,3,1,2)
-        tensor = torch.from_numpy(brg_img).float().to(device='cuda:0')
+        tensor = torch.from_numpy(brg_img).float().cuda() #to(device='cuda:0')
         #tensor.to('cuda:0')
         #print(tensor.device, tensor.size())
         
@@ -57,6 +57,7 @@ class FLASHFaceVerification():
         detFacesLog = np.array(detFacesLog)
         
         if detFacesLog.shape[0]>0:
+            
             emb_det = []
             for fe_id in range(0,detFacesLog.shape[0],8):
                 detFaceBatch = detFacesLog[fe_id:fe_id+8]
@@ -83,7 +84,6 @@ class FLASHFaceVerification():
     
     def convert_embedding_faceid(self, ref_features, test_features, gal_update, mean=0):
         dist = dist_mat(ref_features, test_features, mean) # outputs numDET x numGT
-
         #gal_add_thrshld = 0
         #gal_update = [True, True, True]
         
