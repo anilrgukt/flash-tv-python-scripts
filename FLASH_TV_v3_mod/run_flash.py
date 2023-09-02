@@ -10,7 +10,7 @@ from face_verification import FLASHFaceVerification
 from gaze_estimation import FLASHGazeEstimator, load_limits, get_lims, eval_thrshld
 from face_processing import FaceModelv4 as FaceProcessing
 from utils.bbox_utils import Bbox
-from utils.visualizer import draw_rect_det, draw_rect_ver, draw_gz
+from utils.visualizer import draw_rect_det, draw_rect_ver, draw_gz, ts2num, num2ts, get_xticks
 
 from utils.stream import WebcamVideoStream
 
@@ -20,14 +20,18 @@ from datetime import datetime
 import matplotlib.pyplot as plt
 import pandas as pd
 
-'''
-data_path = '/media/flashsys007/FLASH_SSD/112_data'
-frame_path = '/media/flashsys007/FLASH_SSD/112_data/112_frames'
-det_res_path = '/media/flashsys007/FLASH_SSD/112_data/112_detres'
-det_bbx_path = '/media/flashsys007/FLASH_SSD/112_data/112_detres_bbx'
-fv_res_path = '/media/flashsys007/FLASH_SSD/112_data/112_fvres'
-gz_res_path = '/media/flashsys007/FLASH_SSD/112_data/112_gzres'
-'''
+
+
+plot_data = True
+if plot_data:
+    num_mins = 5
+    window_duration = num_mins*60
+
+    plt.figure('TV viewing behavior', figsize=(10,2))
+    plt.rcParams.update({'font.size': 14})
+    plt.yticks([], [])
+    plt.ylim([0,1])
+
 
 data_path = '/home/flashsys007/dmdm2023/data'
 frame_path = '/home/flashsys007/dmdm2023/data/frames'
@@ -38,11 +42,10 @@ gz_res_path = '/home/flashsys007/dmdm2023/data/gzres'
 
 
 vis = True
-write_image = True
-
-cam_stream = False
+write_image = False
+cam_stream = True
 save_bbx = not cam_stream
-skip_detector = True
+skip_detector = False
 
 frame_ls = os.listdir(frame_path)
 frame_ls.sort()
@@ -51,21 +54,18 @@ fd = FlashFaceDetector() #detector_hw=[480,860]) #detector_hw=[720,1280]) #detec
 fv = FLASHFaceVerification() #verification_threshold=0.516)
 gz = FLASHGazeEstimator()
 
-if not skip_detector:
-    faces, lmarks = fd.face_detect(cv2.imread('frame_00000.png'))
-
-
 face_processing = FaceProcessing(frame_resolution=[1080,1920], detector_resolution=[342,608],
                                  face_size=112, face_crop_offset=16, small_face_padding=7, small_face_size=65)
+gt_embedding = fv.get_gt_emb(fam_id='123',path=data_path,face_proc=face_processing)
 
 gaze_face_processing = FaceProcessing(frame_resolution=[1080,1920], detector_resolution=[342,608], 
                                     face_size=160, face_crop_offset=45, small_face_padding=3, small_face_size=65)                                 
-
-
 loc_lims = load_limits(file_path='./4331_v3r50reg_reg_testlims_35_53_7_9.npy', setting='center-big-med')
 num_locs = loc_lims.shape[0]
 
-gt_embedding = fv.get_gt_emb(fam_id='123',path=data_path,face_proc=face_processing)
+
+if not skip_detector:
+    faces, lmarks = fd.face_detect(cv2.imread('frame_00000.png'))
 
 stream = WebcamVideoStream()
 stream.start(src='/dev/video0', width=1920, height=1080, fps=30)
@@ -74,11 +74,24 @@ if not cam_stream:
     time.sleep(3)
     stream.stop()
 
-plt.ylim([-.25,1.25])
+if plot_data:
+    start_time = datetime.now().time().strftime("%H:%M:%S") # strftime("%Y-%m-%d %H:%M:%S")
+    start_n = ts2num(start_time)
+    
+    plt.xlim([start_n, start_n + window_duration+5])
+    
+    plt.bar(start_n-3, 1, width=1, color='yellowgreen', label='Gaze')
+    plt.bar(start_n-4, 1, width=1, color='deepskyblue', label='No-Gaze')
+    plt.legend(bbox_to_anchor=(1.05, 1.0), loc='upper left')
+    
+    label_xticks = get_xticks(start_n, num_mins)
+    plt.xticks(ticks=range(start_n, start_n + (num_mins+1)*60,60),labels=label_xticks)
+    plt.tight_layout()
+    
 #
-#frame_id = 0
-#while True:
-for frame_id, frame_name in enumerate(frame_ls):    
+#for frame_id, frame_name in enumerate(frame_ls):    
+frame_id = 0
+while True:
     if cam_stream:
         frame_name = 'sframe_%05d.png'%(frame_id)
         img_cv1080 = stream.read()
@@ -99,8 +112,9 @@ for frame_id, frame_name in enumerate(frame_ls):
         faces, lmarks = fd.face_detect(img_cv1080)
         bls = fd.convert_bbox(faces, lmarks)
         
-        fi = open(os.path.join(det_bbx_path, frame_name+'.pickle'),'wb')
-        pickle.dump(bls, fi)
+        if not cam_stream:
+            fi = open(os.path.join(det_bbx_path, frame_name+'.pickle'),'wb')
+            pickle.dump(bls, fi)
         
     
     bbox_ls = [Bbox(b) for b in bls]
@@ -157,7 +171,7 @@ for frame_id, frame_name in enumerate(frame_ls):
     
     #draw_rect_ver(img_np608, bls, None, os.path.join(fv_res_path, frame_name))
     if tc_face is not None:
-        cv2.imwrite('./tmp/%s.png'%(frame_name[:-4]), tc_face)
+        #cv2.imwrite('./tmp/%s.png'%(frame_name[:-4]), tc_face)
         gaze_input = gz.to_input([tc_face])
         output = gz.gaze_estimate(gaze_input)
         o1, e1 = output[0]
@@ -175,12 +189,6 @@ for frame_id, frame_name in enumerate(frame_ls):
         #print(frame_id, o1[0,0], o1[0,1], 'Gaze-detected', gaze_est[0])
         print('%s, Gaze-label: %d'%(frame_time.strftime("%Y-%m-%d %H:%M:%S"), gaze_est[0]))
         
-        if gaze_est[0]:
-            plt.plot(frame_time.strftime("%Y-%m-%d %H:%M:%S.f"), 1, 'o',color='g')
-            plt.pause(0.05)
-        else:   
-            plt.plot(frame_time.strftime("%Y-%m-%d %H:%M:%S.f"), 1, 'd',color='b')
-            plt.pause(0.05)
     else:
         tmp=10
         #draw_rect_det(img_np608, bls, os.path.join(det_res_path, frame_name))
@@ -188,6 +196,28 @@ for frame_id, frame_name in enumerate(frame_ls):
         #print(frame_id, None, None, 'Child-not-detected')
         print('%s, Gaze-label: %s'%(frame_time.strftime("%Y-%m-%d %H:%M:%S"), 'child-not-detected'))
     
+    if plot_data:
+        if not tc_bbx is None:
+            now_time = frame_time.now().time().strftime("%H:%M:%S")
+            n_now = ts2num(now_time)
+            h,m,s = num2ts(n_now)
+            
+            plt_val = gaze_est[0]
+            colors = 'yellowgreen' if plt_val==1 else 'deepskyblue'
+            
+            plt.bar(n_now, 1, color=colors, width=1)
+            plt.pause(0.01)
+            
+            if start_n + window_duration == n_now: #(n_now - 1) or start_n + window_duration == (n_now + 1):
+                #plt.clf()
+                start_n = n_now
+                plt.xlim([start_n, start_n + window_duration+5])
+
+                label_xticks = get_xticks(start_n, num_mins)
+                plt.xticks(ticks=range(start_n, start_n + (num_mins+1)*60,60),labels=label_xticks)
+                plt.tight_layout()
+    
+        
     if vis:
         cv2.imshow('Gaze Result', result_img)
         pressedKey = cv2.waitKey(1) & 0xFF
@@ -197,22 +227,9 @@ for frame_id, frame_name in enumerate(frame_ls):
     if cam_stream:
         frame_id = frame_id+1
     
-    #im1.set_data(result_img[:,:,::-1])
-    #plt.pause(0.01)
-plt.show()
 stream.stop()
-
-#print(len(frame_ls))
-#plt.ioff() # due to infinite loop, this gets never called.
-#plt.show()
+cv2.destroyAllWindows()
+plt.show()
 
 
-'''
-img = cv2.imread('/home/flashsys1/Desktop/FLASH_TV_v3_mod/000015.png')
-img2 = cv2.resize(img, (608,342))
 
-faces, lmarks = fd.face_detect(img)
-bls = fd.convert_bbox(faces, lmarks)
-
-draw_rect_det(img2[:,:,::-1], bls, 'tmp_det.png')
-'''

@@ -110,6 +110,31 @@ def draw_rect_gz(img, frm, start, end, color, save_file):
     cv2.putText(cv_img,str(frm), (455,30), cv2.FONT_HERSHEY_PLAIN, 2, 255)
     cv2.imwrite(save_file, cv_img)
     return cv_img
+    
+def ts2num(t):
+    h,m,s = t.strip().split(':')
+    n = int(h)*3600 + int(m)*60 + int(s)
+    return n
+
+def num2ts(n):
+    h = n // 3600 #t.split(:)
+    rs = n % 3600 
+    m = rs // 60
+    s = rs % 60
+    
+    return h, m, s
+
+def get_xticks(n, mins):
+    xticks = []
+    for i in range(mins+1):
+        #print(i, n + i*mins*60)
+        h,m,s = num2ts(n + i*60)
+        
+        k = '%02d:%02d'%(h,m)
+        xticks.append(k)
+    return xticks
+
+
 '''    
 def draw_rect_gz(img, frm, start, end, color, save_file):
     cv_img = np.copy(img)

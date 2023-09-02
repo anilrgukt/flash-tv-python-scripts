@@ -1,27 +1,15 @@
 from datetime import datetime
 
 import matplotlib
-matplotlib.use("Qt5Agg")
+#matplotlib.use("Qt5Agg")
 import matplotlib.pyplot as plt
 
 import time
-import cv2
 import random
 
-def ts2num(t):
-    h,m,s = t.strip().split(':')
-    n = int(h)*3600 + int(m)*60 + int(s)
-    return n
+from visualizer import ts2num, num2ts, get_xticks
 
-def num2ts(n):
-    h = n // 3600 #t.split(:)
-    rs = n % 3600 
-    m = rs // 60
-    s = rs % 60
-    
-    return h, m, s
-
-if __name__ == "__main__"
+if __name__ == "__main__":
 
     l = [0,1,2]
 
@@ -29,30 +17,31 @@ if __name__ == "__main__"
     print(start_time)
 
 
-    num_mins = 5
+    num_mins = 3
     start_n = ts2num(start_time)
     window_duration = num_mins*60
 
     print(start_n, window_duration)
 
-    fig = plt.figure(figsize=(10,3))
+    plt.figure('TV viewing behavior', figsize=(10,2))
     plt.rcParams.update({'font.size': 14})
     plt.yticks([], [])
     plt.ylim([0,1])
-    plt.xlim([start_n, start_n + window_duration])
-    plt.xlabel('Time stamp (HH:MM)')
-    plt.title('TV viewing behavior')
+    plt.xlim([start_n, start_n + window_duration+5])
+    #plt.xlabel('Time stamp (HH:MM)')
+    #plt.title('TV viewing behavior')
+    
+    plt.bar(start_n-3, 1, width=1, color='yellowgreen', label='Gaze')
+    plt.bar(start_n-4, 1, width=1, color='deepskyblue', label='No-Gaze')
+    plt.legend(bbox_to_anchor=(1.05, 1.0), loc='upper left')
+    
 
-    label_xticks = []
-    for i in range(num_mins):
-        print(i, start_n + i*num_mins*60)
-        h,m,s = num2ts(start_n + i*60)
-        
-        k = '%02d:%02d'%(h,m)
-        label_xticks.append(k)
+    label_xticks = get_xticks(start_n, num_mins)
+    print(label_xticks)
 
 
-    plt.xticks(ticks=range(start_n,start_n+window_duration,60),labels=label_xticks)
+    plt.xticks(ticks=range(start_n, start_n + (num_mins+1)*60,60),labels=label_xticks)
+    plt.tight_layout()
 
     for i in range(1000):
         random.shuffle(l)
@@ -74,9 +63,11 @@ if __name__ == "__main__"
         time.sleep(0.3)
         
         if start_n + window_duration == n_now: #(n_now - 1) or start_n + window_duration == (n_now + 1):
-            plt.clf()
+            #plt.clf()
             start_n = n_now
             plt.xlim([start_n, start_n + window_duration])
+            label_xticks = get_xticks(start_n, num_mins)
+            plt.xticks(ticks=range(start_n, start_n + (num_mins+1)*60,60),labels=label_xticks)
 
 
     plt.show()
