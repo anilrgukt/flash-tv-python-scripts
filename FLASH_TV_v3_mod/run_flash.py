@@ -42,7 +42,7 @@ gz_res_path = '/home/flashsys007/dmdm2023/data/gzres'
 
 
 vis = True
-write_image = False
+write_image = True
 cam_stream = True
 save_bbx = not cam_stream
 skip_detector = False
@@ -100,6 +100,8 @@ while True:
         img_path = os.path.join(frame_path, frame_name)
         img_cv1080 = cv2.imread(img_path)
         frame_time = datetime.now()
+    
+    img_np1080 = img_cv1080[:,:,::-1]
     
     img_cv608 = cv2.resize(img_cv1080, (608,342))
     img_np608 = img_cv608[:,:,::-1]    
@@ -176,23 +178,26 @@ while True:
         output = gz.gaze_estimate(gaze_input)
         o1, e1 = output[0]
         o2, e2 = output[1]
+        
         o1 = o1.cpu().data.numpy()
         e1 = e1.cpu().data.numpy()
-        #print(o1)
-        #print(o.shape, e.shape)
         
+        o2 = o2.cpu().data.numpy()
+        e2 = e2.cpu().data.numpy()
+        
+        o1 = 0.6*o1 + 0.4*o2
         lims_idx = get_lims(tc_bbx, num_locs, H=342, W=608)
         _, _, gaze_est, _, _ = eval_thrshld(np.array([o1[0,0]]), np.array([o1[0,1]]), gt_lab=np.array([0]), lims=loc_lims[lims_idx])
         
         
-        result_img = draw_gz(img_np608, o1, tc_bbx, os.path.join(gz_res_path, frame_name), gz_label=gaze_est[0], write_img=write_image)
+        result_img = draw_gz(img_np1080, o1, tc_bbx, os.path.join(gz_res_path, frame_name), gz_label=gaze_est[0], write_img=write_image, scale=[480, 854])
         #print(frame_id, o1[0,0], o1[0,1], 'Gaze-detected', gaze_est[0])
         print('%s, Gaze-label: %d'%(frame_time.strftime("%Y-%m-%d %H:%M:%S"), gaze_est[0]))
         
     else:
         tmp=10
         #draw_rect_det(img_np608, bls, os.path.join(det_res_path, frame_name))
-        result_img = draw_rect_ver(img_np608, bls, None, os.path.join(gz_res_path, frame_name))
+        result_img = draw_rect_ver(img_np1080, bls, None, os.path.join(gz_res_path, frame_name),scale=[480, 854])
         #print(frame_id, None, None, 'Child-not-detected')
         print('%s, Gaze-label: %s'%(frame_time.strftime("%Y-%m-%d %H:%M:%S"), 'child-not-detected'))
     
@@ -211,6 +216,7 @@ while True:
             if start_n + window_duration == n_now: #(n_now - 1) or start_n + window_duration == (n_now + 1):
                 #plt.clf()
                 start_n = n_now
+                frame_id = 0
                 plt.xlim([start_n, start_n + window_duration+5])
 
                 label_xticks = get_xticks(start_n, num_mins)

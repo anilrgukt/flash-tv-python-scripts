@@ -24,16 +24,30 @@ def draw_rect_det(img, dboxes, save_file, draw_lmarks=True):
     cv2.imwrite(save_file, cv_img)
     return cv_img
     
-def draw_rect_ver(img, dboxes1, dboxes2, save_file):
+def draw_rect_ver(img, dboxes1, dboxes2, save_file, draw_lmarks=False, scale=None):
     cv_img = np.copy(img)
     tmp_channel = np.copy(cv_img[:,:,0])
     cv_img[:,:,0] = cv_img[:,:,2]
     cv_img[:,:,2] = tmp_channel
     
     l = [(0,255,0),(255,0,0),(255,255,0),(255,0,255),(0,0,255)]
+    
+    if scale is not None:
+        w = scale[1]
+        h = scale[0]
+        new_img = cv2.resize(cv_img, (w,h))
+        cv_img = new_img
 
-    draw_lmarks = True
+    #draw_lmarks = True
     for i, dbox in enumerate(dboxes1):
+        
+        if scale is not None:
+            dbox["left"]  = dbox["left"]*w/608.0
+            dbox["right"]  = dbox["right"]*w/608.0
+            
+            dbox["top"]  = dbox["top"]*h/342.0
+            dbox["bottom"]  = dbox["bottom"]*h/342.0
+        
         cv2.rectangle(cv_img, (int(dbox["left"]), int(dbox["top"])), (int(dbox["right"]), int(dbox["bottom"])), l[dbox['idx']], 2) 
         lmarks = dbox['lmarks']
         lmcolor = [(0,0,255),(0,255,0),(255,0,0),(255,255,0),(0,0,0)] #rgbc,black
@@ -51,7 +65,7 @@ def draw_rect_ver(img, dboxes1, dboxes2, save_file):
     #cv2.imwrite(save_file, cv_img)
     return cv_img
 
-def draw_gz(frm, gaze_angle, bbx, save_path, gz_label=None, write_img=False):
+def draw_gz(frm, gaze_angle, bbx, save_path, gz_label=None, write_img=False, scale=None):
 
     s0 = gaze_angle[0,0]
     s1 = gaze_angle[0,1]
@@ -66,6 +80,15 @@ def draw_gz(frm, gaze_angle, bbx, save_path, gz_label=None, write_img=False):
     start, end = (int(sx),int(sy)), (int(sx+x),int(sy+y))
     
     cv_img = frm[:,:,::-1]
+    
+    if scale is not None:
+        tmp=10
+        w = scale[1]
+        h = scale[0]
+        new_img = cv2.resize(cv_img, (w,h))
+        start = (int(start[0]*w/608.0), int(start[1]*h/342.0))
+        end = (int(end[0]*w/608.0), int(end[1]*h/342.0))
+        cv_img = new_img
     
     colors = [(255,0,0),(0,255,0)]
     if gz_label is not None:
@@ -110,6 +133,7 @@ def draw_rect_gz(img, frm, start, end, color, save_file):
     cv2.putText(cv_img,str(frm), (455,30), cv2.FONT_HERSHEY_PLAIN, 2, 255)
     cv2.imwrite(save_file, cv_img)
     return cv_img
+
     
 def ts2num(t):
     h,m,s = t.strip().split(':')

@@ -167,7 +167,9 @@ def get_lims(bbox, num_locs, H, W):
     filter_row = np.logical_and(rowm>topl, rowm<bottoml)
     filter_ = np.logical_and(filter_col, filter_row)
     
-    assert filter_.sum()<3
+    if not filter_.sum()<3:
+        print(rowm, colm, filter_.sum(), filter_)
+        raise
     
     return np.where(filter_)[0][0]
     
