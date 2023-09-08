@@ -78,6 +78,10 @@ if plot_data:
     start_time = datetime.now().time().strftime("%H:%M:%S") # strftime("%Y-%m-%d %H:%M:%S")
     start_n = ts2num(start_time)
     
+    h,m,s = num2ts(start_n)
+    start_time_ = '%02d:%02d:00'%(h,m)
+    start_n = ts2num(start_time_)
+    
     plt.xlim([start_n, start_n + window_duration+5])
     
     plt.bar(start_n-3, 1, width=1, color='yellowgreen', label='Gaze')
@@ -85,6 +89,9 @@ if plot_data:
     plt.legend(bbox_to_anchor=(1.05, 1.0), loc='upper left')
     
     label_xticks = get_xticks(start_n, num_mins)
+    #print(start_n, start_n + window_duration+5)
+    #print(range(start_n, start_n + (num_mins+1)*60,60))
+    #print(label_xticks)
     plt.xticks(ticks=range(start_n, start_n + (num_mins+1)*60,60),labels=label_xticks)
     plt.tight_layout()
     
@@ -210,6 +217,7 @@ while True:
             plt_val = gaze_est[0]
             colors = 'yellowgreen' if plt_val==1 else 'deepskyblue'
             
+            #print(now_time, n_now)
             plt.bar(n_now, 1, color=colors, width=1)
             plt.pause(0.01)
             

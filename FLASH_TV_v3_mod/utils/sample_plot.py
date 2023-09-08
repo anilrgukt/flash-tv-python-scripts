@@ -17,7 +17,7 @@ if __name__ == "__main__":
     print(start_time)
 
 
-    num_mins = 3
+    num_mins = 5
     start_n = ts2num(start_time)
     window_duration = num_mins*60
 
