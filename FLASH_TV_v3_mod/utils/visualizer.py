@@ -99,7 +99,10 @@ def draw_gz(frm, gaze_angle, bbx, save_path, gz_label=None, write_img=False, sca
     if write_img:
         cv2.imwrite(save_path, cv_img)
     
-    return cv_img
+    tmp_ = np.zeros((256,256)).astype(np.uint8)
+    end_loc = int(128+x), int(128+y)
+    tmp_ = cv2.circle(tmp_, end_loc, 5, color=255, thickness=-1)
+    return cv_img, tmp_
 
 def draw_gzbox(frm, gaze_angle, dbox, save_path, gz_label=None, write_img=False):
 

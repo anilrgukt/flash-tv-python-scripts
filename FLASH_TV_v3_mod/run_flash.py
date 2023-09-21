@@ -192,12 +192,12 @@ while True:
         o2 = o2.cpu().data.numpy()
         e2 = e2.cpu().data.numpy()
         
-        o1 = 0.6*o1 + 0.4*o2
+        o1 = 0.9*o1 + 0.1*o2
         lims_idx = get_lims(tc_bbx, num_locs, H=342, W=608)
         _, _, gaze_est, _, _ = eval_thrshld(np.array([o1[0,0]]), np.array([o1[0,1]]), gt_lab=np.array([0]), lims=loc_lims[lims_idx])
         
         
-        result_img = draw_gz(img_np1080, o1, tc_bbx, os.path.join(gz_res_path, frame_name), gz_label=gaze_est[0], write_img=write_image, scale=[480, 854])
+        result_img, result_img2 = draw_gz(img_np1080, o1, tc_bbx, os.path.join(gz_res_path, frame_name), gz_label=gaze_est[0], write_img=write_image, scale=[480, 854])
         #print(frame_id, o1[0,0], o1[0,1], 'Gaze-detected', gaze_est[0])
         print('%s, Gaze-label: %d'%(frame_time.strftime("%Y-%m-%d %H:%M:%S"), gaze_est[0]))
         
@@ -205,6 +205,7 @@ while True:
         tmp=10
         #draw_rect_det(img_np608, bls, os.path.join(det_res_path, frame_name))
         result_img = draw_rect_ver(img_np1080, bls, None, os.path.join(gz_res_path, frame_name),scale=[480, 854])
+        result_img2 = np.zeros((256,256)).astype(np.uint8)
         #print(frame_id, None, None, 'Child-not-detected')
         print('%s, Gaze-label: %s'%(frame_time.strftime("%Y-%m-%d %H:%M:%S"), 'child-not-detected'))
     
@@ -234,6 +235,8 @@ while True:
         
     if vis:
         cv2.imshow('Gaze Result', result_img)
+        #if result_img2 is not None:
+        #    cv2.imshow('Gaze tracking', result_img2)
         pressedKey = cv2.waitKey(1) & 0xFF
         if pressedKey == ord('q'):
             break
