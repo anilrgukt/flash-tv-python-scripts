@@ -18,8 +18,8 @@ import torchvision.utils as vutils
 sys.path.insert(1, './gaze/')
 from gaze.model import GazeLSTM, GazeLSTMreg
 
-checkpoint_r50 = '/home/flashsys007/gaze_models/model_v3_best_Gaze360ETHXrtGene_r50.pth.tar'
-checkpoint_r50reg = '/home/flashsys007/gaze_models/model_v3_best_Gaze360ETHXrtGene_r50reg.pth.tar'
+checkpoint_r50 = '/home/flashsys008/gaze_models/model_v3_best_Gaze360ETHXrtGene_r50.pth.tar'
+checkpoint_r50reg = '/home/flashsys008/gaze_models/model_v3_best_Gaze360ETHXrtGene_r50reg.pth.tar'
 cudnn.benchmark = True
 
 model_v = GazeLSTM()

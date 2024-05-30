@@ -33,16 +33,16 @@ if plot_data:
     plt.ylim([0,1])
 
 
-data_path = '/home/flashsys007/dmdm2023/data'
-frame_path = '/home/flashsys007/dmdm2023/data/frames'
-det_res_path = '/home/flashsys007/dmdm2023/data/detres'
-det_bbx_path = '/home/flashsys007/dmdm2023/data/detres_bbx'
-fv_res_path = '/home/flashsys007/dmdm2023/data/fvres'
-gz_res_path = '/home/flashsys007/dmdm2023/data/gzres'
+data_path = '/home/flashsys008/dmdm2023/data'
+frame_path = '/home/flashsys008/dmdm2023/data/frames'
+det_res_path = '/home/flashsys008/dmdm2023/data/detres'
+det_bbx_path = '/home/flashsys008/dmdm2023/data/detres_bbx'
+fv_res_path = '/home/flashsys008/dmdm2023/data/fvres'
+gz_res_path = '/home/flashsys008/dmdm2023/data/gzres'
 
 
 vis = True
-write_image = True
+write_image = False
 cam_stream = True
 save_bbx = not cam_stream
 skip_detector = False

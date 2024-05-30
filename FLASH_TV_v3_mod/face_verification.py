@@ -15,7 +15,7 @@ import net
 
 adaface_models = {
     #'ir_50':"pretrained/adaface_ir50_ms1mv2.ckpt",
-    'ir_101':"/home/flashsys007/Desktop/FLASH_TV_v3/AdaFace/pretrained/adaface_ir101_webface12m.ckpt",
+    'ir_101':"/home/flashsys008/Desktop/FLASH_TV_v3/AdaFace/pretrained/adaface_ir101_webface12m.ckpt",
 }
 
 def load_pretrained_model(architecture='ir_101'):
