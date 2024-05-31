@@ -5,10 +5,10 @@ import time
 import cv2
 import numpy as np 
 
-from face_detection import FlashFaceDetector
-from face_verification import FLASHFaceVerification
-from gaze_estimation import FLASHGazeEstimator
-from face_processing import FaceModelv4 as FaceProcessing
+from flash.face_detection import FlashFaceDetector
+from flash.face_verification import FLASHFaceVerification
+from flash.gaze_estimation import FLASHGazeEstimator
+from flash.face_processing import FaceModelv4 as FaceProcessing
 from utils.bbox_utils import Bbox
 from utils.visualizer import draw_rect_det, draw_rect_ver, draw_gz
 

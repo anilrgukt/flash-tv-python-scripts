@@ -17,7 +17,7 @@ import torchvision.models as models
 import torchvision.utils as vutils
 
 sys.path.insert(1, './gaze/')
-from gaze.model import GazeLSTM, GazeLSTMreg
+from .gaze.model import GazeLSTM, GazeLSTMreg
 
 checkpoint_r50 = '/home/'+os.getlogin()+'/gaze_models/model_v3_best_Gaze360ETHXrtGene_r50.pth.tar'
 checkpoint_r50reg = '/home/'+os.getlogin()+'/gaze_models/model_v3_best_Gaze360ETHXrtGene_r50reg.pth.tar'

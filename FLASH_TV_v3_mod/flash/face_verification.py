@@ -10,7 +10,7 @@ from skimage.transform import resize
 from utils.face_verification_utils import dist_mat, distance
 
 # new fv model 
-import net
+from . import net
 
 
 adaface_models = {

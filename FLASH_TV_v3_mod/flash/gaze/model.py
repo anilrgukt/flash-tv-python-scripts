@@ -12,7 +12,7 @@ import numpy as np
 from torch.nn.init import normal, constant
 import math
 
-from resnet import resnet18, resnet34, resnet50
+from .resnet import resnet18, resnet34, resnet50
 
 
 

@@ -16,7 +16,7 @@ import cv2
 import numpy as np
 
 # custom libs
-from flash_runtime_utils import check_face_presence, cam_id
+from utils.flash_runtime_utils import check_face_presence, cam_id
 from flash_main import FLASHtv  
 
 def frame_write(q, frm_count):
