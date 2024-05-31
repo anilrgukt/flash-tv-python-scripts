@@ -4,7 +4,7 @@ import numpy as np
 import time as time
 from utils.stream import FlashVideoQueueThread
 
-cam_path = '/dev/video2'
+cam_path = '/dev/video0'
 
 cam_thread = FlashVideoQueueThread(cam_path)
 stream_params = {'fps':30, 'width':1920, 'height':1080}
