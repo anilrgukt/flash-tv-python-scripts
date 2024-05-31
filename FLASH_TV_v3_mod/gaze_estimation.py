@@ -1,3 +1,4 @@
+import os
 import sys 
 import torch
 import numpy as np 
@@ -18,8 +19,8 @@ import torchvision.utils as vutils
 sys.path.insert(1, './gaze/')
 from gaze.model import GazeLSTM, GazeLSTMreg
 
-checkpoint_r50 = '/home/flashsys008/gaze_models/model_v3_best_Gaze360ETHXrtGene_r50.pth.tar'
-checkpoint_r50reg = '/home/flashsys008/gaze_models/model_v3_best_Gaze360ETHXrtGene_r50reg.pth.tar'
+checkpoint_r50 = '/home/'+os.getlogin()+'/gaze_models/model_v3_best_Gaze360ETHXrtGene_r50.pth.tar'
+checkpoint_r50reg = '/home/'+os.getlogin()+'/gaze_models/model_v3_best_Gaze360ETHXrtGene_r50reg.pth.tar'
 cudnn.benchmark = True
 
 model_v = GazeLSTM()
@@ -39,8 +40,6 @@ modelreg.eval()
 gaze_models = [model, modelreg]
         
 
-
-
 class FLASHGazeEstimator():
     def __init__(self, num_gaze_models=2, img_size=224, vid_res=7):
         #self.num_gaze_models = num_gaze_models      
@@ -52,11 +51,13 @@ class FLASHGazeEstimator():
         self.image_transform = transforms.Compose([transforms.Resize((self.img_size, self.img_size)),transforms.ToTensor(),self.image_normalize,])
         
     def to_input(self, tc_images):
-    
-        
         source_video_7fps = torch.FloatTensor(self.vid_res,3,self.img_size,self.img_size) 
         
-        tc_images = tc_images*7
+        if len(tc_images) == 1:
+            tc_images = tc_images*7
+        else:
+            tc_images = [tc_images[0]]*3 + tc_images + [tc_images[-1]]*2
+            
         for idx, im in enumerate(tc_images):        
             im = Image.fromarray(im)
             source_video_7fps[idx,...] = self.image_transform(im)

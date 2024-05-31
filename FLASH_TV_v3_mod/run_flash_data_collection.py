@@ -92,13 +92,13 @@ def frame_write(q, frm_count):
 write_image_data = True
 rotate_to_find_tc = False
 
-frames_path = '/home/flashsys008/dmdm2023/data/tmp_frames'
-log_path = '/home/flashsys008/dmdm2023/data/tmp.txt'
+frames_path = '/home/'+os.getlogin()+'/dmdm2023/data/tmp_frames'
+log_path = '/home/'+os.getlogin()+'/dmdm2023/data/tmp.txt'
 frame_counter = 1
 
 log_file = [log_path, frame_counter]
 
-flash_tv = FLASHtv(family_id='123', data_path='/home/flashsys008/dmdm2023/data', frame_res_hw=None, output_res_hw=None)
+flash_tv = FLASHtv(family_id='123', data_path='/home/'+os.getlogin()+'/dmdm2023/data', frame_res_hw=None, output_res_hw=None)
 
 
 
@@ -158,14 +158,30 @@ while True:
             frame_1080p_ls = [frame_1080p_ls[3],frame_1080p_ls[4]]
             frame_608p_ls = [frame_608p_ls[3],frame_608p_ls[4]]
             
+            print(frame_stamps[3])
             # Analyze the set of frames
             # detect the child in the frames
             if rotate_to_find_tc:
                 tmp=10
             else:
-                frame_bls = [flash_tv.run_detector(img[:,:,::-1]) for img in frame_1080p_ls]
+                frame_bbox_ls = [flash_tv.run_detector(img[:,:,::-1]) for img in frame_1080p_ls]
             
-            # perform gaze estimation if the child is there
+            if any(frame_bbox_ls):
+                frame_bbox_ls =  [flash_tv.run_verification(img[:,:,::-1], bbox_ls) for img, bbox_ls in zip(frame_1080p_ls, frame_bbox_ls)] 
+                # perform gaze estimation if the child is there
+                print('Running face verification')
+                tc_present, gz_data, tc_bbx = flash_tv.run_gaze(frame_1080p_ls, frame_bbox_ls)
+                if tc_present:
+                    print('TC is present')
+                    #write the gaze and bbx logs
+                else:
+                    #write the gaze no det logs
+                    print('TC is NOT present')
+            else:
+                # no faces detected
+                print('No Faces detected')
+            
+            
             
         
         
