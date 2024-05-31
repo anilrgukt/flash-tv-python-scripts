@@ -9,7 +9,11 @@ import fcntl
 import time
 from datetime import datetime
 
+import cv2
+import numpy as np 
+
 from utils.stream import WebcamVideoStream
+
 
 def create_usb_list():
     device_list = list()
@@ -118,7 +122,7 @@ def write_log_file(log_fname, write_line):
     fid.write(write_line)
     fid.close()
 
-def check_face_presence(log_file):
+def check_face_presence(log_file, detector):
     print('CHECKING FACE presence')
     face_p_duration = 0
     face_np_duration = 0
@@ -150,7 +154,7 @@ def check_face_presence(log_file):
         img_cap_time = datetime.now()
         
         #print('starting face det .... ')
-        dboxes = face_detector(img_cap) # face detection 
+        dboxes = detector(img_cap) # face detection 
         
         #DELETE very low confidence faces if any
         ndboxes = []

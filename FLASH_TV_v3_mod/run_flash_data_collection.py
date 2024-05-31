@@ -90,24 +90,27 @@ def frame_write(q, frm_count):
 
 # super variables 
 write_image_data = True
-frames_path = '/home/flashsys008/dmdm2023/data/tmp_frames'
-log_file = '/home/flashsys008/dmdm2023/data/tmp.txt'
+rotate_to_find_tc = False
 
+frames_path = '/home/flashsys008/dmdm2023/data/tmp_frames'
+log_path = '/home/flashsys008/dmdm2023/data/tmp.txt'
+frame_counter = 1
+
+log_file = [log_path, frame_counter]
 
 flash_tv = FLASHtv(family_id='123', data_path='/home/flashsys008/dmdm2023/data', frame_res_hw=None, output_res_hw=None)
 
-rotate_to_find_tc = False
+
 
 while True:
     
     # CHECK if the face is present to start FLASH
-    tc_presence_duration, log_file = check_face_presence(log_file, )
-    #frm_counter = log_file[1]
-    log_fname = log_file #[0]
+    tc_presence_duration, log_file = check_face_presence(log_file, flash_tv.run_detector)
+    frame_counter = log_file[1] 
+    log_path = log_file[0]
     
         
     # INITIATE the frame capture queue 
-    frame_counter = 0
     print('starting the batch cam', frame_counter)
     q = Queue(maxsize=500)
     stop_capture = False
@@ -143,7 +146,7 @@ while True:
             frame_counts = [b[1] for b in batch_data]
             frame_stamps = [b[2] for b in batch_data]
         
-            frm_counter = frame_counts[-1]
+            frame_counter = frame_counts[-1]
             tdet = time.time()
             if write_image_data:
                 tmp = [cv2.imwrite(os.path.join(frames_path, str(frame_counts[k]).zfill(6)+'.png'), frame_1080p_ls[k]) for k in range(3,5)]
@@ -161,7 +164,6 @@ while True:
                 tmp=10
             else:
                 frame_bls = [flash_tv.run_detector(img[:,:,::-1]) for img in frame_1080p_ls]
-            print(len(frame_bls[0]), len(frame_bls[1]))
             
             # perform gaze estimation if the child is there
             
