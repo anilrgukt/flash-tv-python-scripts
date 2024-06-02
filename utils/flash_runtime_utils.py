@@ -114,12 +114,13 @@ def cam_id():
     
     return cam_idx
 
-def write_log_file(log_fname, write_line):
+def write_log_file(log_fname, write_lines):
     fid = open(log_fname,'a')
-    write_line = [str(l) for l in write_line]
-    write_line = ' '.join(write_line)
-    write_line = write_line + '\n'
-    fid.write(write_line)
+    for write_line in write_lines:
+        write_line = [str(l) for l in write_line]
+        write_line = ' '.join(write_line)
+        write_line = write_line + '\n'
+        fid.write(write_line)
     fid.close()
 
 def check_face_presence(log_file, detector):
@@ -164,7 +165,7 @@ def check_face_presence(log_file, detector):
         dboxes = ndboxes
         
         write_line = [img_cap_time, str(frm_counter).zfill(6)]
-        write_line = write_line + [str(len(dboxes)), str(0), str(None), str(None), str(None), str(None), str(None), str(None), str(None)]
+        write_line = write_line + [str(len(dboxes)), str(0), str(None), str(None), str(None), str(None), str(None), str(None), str(None), str(None)]
         if len(dboxes) < 1: # if no faces continue
             print('Face detector LOG ouput', img_cap_time, np.array([None, None]), 'No face detected')
             if face_np_duration > 45:
@@ -179,7 +180,7 @@ def check_face_presence(log_file, detector):
             face_np_time_delay = 0.3
             write_line.append('Face-detected')
             
-        write_log_file(fname_log, write_line)
+        write_log_file(fname_log, [write_line])
         time.sleep(face_np_time_delay)
         frm_counter += 1
         
