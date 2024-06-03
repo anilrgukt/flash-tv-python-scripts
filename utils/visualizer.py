@@ -24,7 +24,7 @@ def draw_rect_det(img, dboxes, save_file, draw_lmarks=True):
     cv2.imwrite(save_file, cv_img)
     return cv_img
     
-def draw_rect_ver(img, dboxes1, dboxes2, save_file, draw_lmarks=False, scale=None):
+def draw_rect_ver(img, dboxes1, dboxes2, save_file, draw_lmarks=False, write_img=False, scale=None):
     cv_img = np.copy(img)
     tmp_channel = np.copy(cv_img[:,:,0])
     cv_img[:,:,0] = cv_img[:,:,2]
@@ -61,6 +61,9 @@ def draw_rect_ver(img, dboxes1, dboxes2, save_file, draw_lmarks=False, scale=Non
     if dboxes2 is not None:
         for i, dbox in enumerate(dboxes2):
    	        cv2.rectangle(cv_img, (int(dbox["left"])+2, int(dbox["top"])+2), (int(dbox["right"])+2, int(dbox["bottom"])+2), (0,255,0), 1) 
+
+    if write_img:
+        cv2.imwrite(save_path, cv_img)
 
     #cv2.imwrite(save_file, cv_img)
     return cv_img

@@ -11,6 +11,7 @@ from datetime import datetime
 
 import cv2
 import numpy as np 
+import math 
 
 from utils.stream import WebcamVideoStream
 
@@ -193,4 +194,31 @@ def check_face_presence(log_file, detector):
     log_file[1] = frm_counter
 
     return face_p_duration, log_file
+
+
+def correct_rotation(a, tc_angle):
+    #s0 = output_varr[i,0]
+    #s1 = output_varr[i,1]
+    
+    s0 = a[0]
+    s1 = a[1]
+    
+    x = math.cos(s1)*math.sin(s0) # -40*
+    y = math.sin(s1) # -40*
+    z = -math.cos(s1)*math.cos(s0)
+    
+    tangle = -(tc_angle/180)*math.pi
+    xt = math.cos(tangle)*x + math.sin(tangle)*y
+    yt = -math.sin(tangle)*x + math.cos(tangle)*y
+    zt = z
+    
+    vt = np.array([xt,yt,zt])
+    vtnorm = (vt*vt).sum()
+    vt = vt / np.sqrt(vtnorm)
+    
+    ns0 = np.arctan2(vt[0],-vt[2])
+    ns1 = np.arcsin(vt[1])
+    
+    return [ns0, ns1, a[2]]
+
 

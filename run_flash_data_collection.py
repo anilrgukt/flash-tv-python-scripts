@@ -16,8 +16,10 @@ import cv2
 import numpy as np
 
 # custom libs
-from utils.flash_runtime_utils import check_face_presence, cam_id, write_log_file
 from flash_main import FLASHtv  
+
+from utils.flash_runtime_utils import check_face_presence, cam_id, write_log_file, correct_rotation
+from utils.visualizer import draw_rect_ver, draw_gz
 
 def frame_write(q, frm_count):
     idx = cam_id()
@@ -91,6 +93,7 @@ write_image_data = True
 rotate_to_find_tc = False
 
 frames_path = '/home/'+os.getlogin()+'/dmdm2023/data/tmp_frames'
+frames_save_path = '/home/'+os.getlogin()+'/dmdm2023/data/tmp_frames_res'
 log_path = '/home/'+os.getlogin()+'/dmdm2023/data/tmp.txt'
 frame_counter = 1
 
@@ -191,9 +194,8 @@ while True:
                     frame_bbox_ls =  [flash_tv.run_verification(img[:,:,::-1], bbox_ls) for img, bbox_ls in zip(frame_1080p_ls, frame_bbox_ls)] 
                     
                     # perform gaze estimation if the child is there
-                    tc_present, gz_data, tc_bbox = flash_tv.run_gaze(frame_1080p_ls, frame_bbox_ls)
-                    num_faces = len(frame_bbox_ls[0]) 
-                    num_faces = num_faces if num_faces>0 else len(frame_bbox_ls[1])
+                    tc_present, gz_data, tc_bbox, tc_id = flash_tv.run_gaze(frame_1080p_ls, frame_bbox_ls)
+                    num_faces = 0 if tc_id<0 else len(frame_bbox_ls[tc_id])
                     
                     if tc_present:
                         label = 'Gaze-det'
@@ -202,8 +204,13 @@ while True:
                         gaze_data1 = list(o1[0]) + [e1[0][0]]
                         gaze_data2 = list(o2[0]) + [e2[0][0]]
                         tc_angle = tc_bbox['angle']
-                        tc_pos = [tc_bbox['top'], tc_bbox['left'], tc_bbox['bottom'], tc_bbox['right']]
                         
+                        if abs(tc_angle)>=30:
+                            #print('face rotation tranform!')
+                            gaze_data1 = correct_rotation(gaze_data1, tc_angle)
+                            gaze_data2 = correct_rotation(gaze_data2, tc_angle)
+                            
+                        tc_pos = [tc_bbox['top'], tc_bbox['left'], tc_bbox['bottom'], tc_bbox['right']]
                         print('%s, %.3f, %.3f, %s'%(str(timestamp), gaze_data1[0], gaze_data1[1], label))
                     else:
                         #write the gaze no det logs
@@ -218,9 +225,17 @@ while True:
                 else:
                     label = 'No-face-detected'
                     num_faces = 0; tc_present = 0;
-                    
                     print('%s, %s'%(str(timestamp), label))
                     write_line = [timestamp, str(frame_counts[3]).zfill(6), num_faces, tc_present, None, None, None, None, None, None, None, None, label]
+                
+                if write_image_data:
+                    save_path = os.path.join(frames_save_path, str(frame_counts[3]).zfill(6) + '.png')
+                    if tc_present:
+                        _, _ = draw_gz(frame_1080p_ls[tc_id], np.array(gaze_data1).reshape(1,3), tc_bbox, save_path, gz_label=None, write_img=True, scale=[480, 854])
+                    else:
+                        _ = draw_rect_ver(frame_1080p_ls[1], frame_bbox_ls[1], None, save_path, write_img=True, scale=[480, 854])
+                        #if num_faces>0:
+                        #else:
                     
                 log_lines.append(write_line)
                 if len(log_lines)==5:

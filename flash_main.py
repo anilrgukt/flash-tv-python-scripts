@@ -66,9 +66,12 @@ class FLASHtv():
         
         tc_imgs = []
         tc_boxs = []
+        tc_id = -1
+        tc_frame_id = 0
         for img, bbox_ls in zip(frame_ls, frame_bbox_ls):
             img_cv1080 = img[:,:,::-1]
             
+            tc_frame_id += 1
             for bbx in bbox_ls:
                 if bbx['idx'] == 0: # target child ID
                     bbx_ = Bbox(bbx)
@@ -83,6 +86,7 @@ class FLASHtv():
                     
                     tc_imgs.append(tc_face)
                     tc_boxs.append(tc_bbx)
+                    tc_id = tc_frame_id-1
         
         tc_present = False        
         gz_data = None
@@ -104,4 +108,4 @@ class FLASHtv():
             gz_data = [o1,e1,o2,e2]
             tc_bbx = tc_boxs[0]
             
-        return tc_present, gz_data, tc_bbx
+        return tc_present, gz_data, tc_bbx, tc_id
