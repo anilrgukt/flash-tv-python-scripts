@@ -24,7 +24,7 @@ def draw_rect_det(img, dboxes, save_file, draw_lmarks=True):
     cv2.imwrite(save_file, cv_img)
     return cv_img
     
-def draw_rect_ver(img, dboxes1, dboxes2, save_file, draw_lmarks=False, write_img=False, scale=None):
+def draw_rect_ver(img, dboxes1, dboxes2, save_path, draw_lmarks=False, write_img=False, scale=None):
     cv_img = np.copy(img)
     tmp_channel = np.copy(cv_img[:,:,0])
     cv_img[:,:,0] = cv_img[:,:,2]
