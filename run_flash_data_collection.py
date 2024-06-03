@@ -211,21 +211,21 @@ while True:
                             gaze_data2 = correct_rotation(gaze_data2, tc_angle)
                             
                         tc_pos = [tc_bbox['top'], tc_bbox['left'], tc_bbox['bottom'], tc_bbox['right']]
-                        print('%s, %.3f, %.3f, %s'%(str(timestamp), gaze_data1[0], gaze_data1[1], label))
+                        print('%s, %06d, %.3f, %.3f, %s'%(str(timestamp), frame_counts[3], gaze_data1[0], gaze_data1[1], label))
                     else:
                         #write the gaze no det logs
                         label = 'Gaze-no-det'
                         gaze_data1 = [None]*3; gaze_data2 = [None]*3;
                         tc_pos = [None]*4; tc_angle = None
                         
-                        print('%s, %s, %s, %s'%(str(timestamp), gaze_data1[0], gaze_data1[1], label))
+                        print('%s, %06d, %s, %s, %s'%(str(timestamp), frame_counts[3], gaze_data1[0], gaze_data1[1], label))
                     
                     write_line = [timestamp, str(frame_counts[3]).zfill(6), num_faces, int(tc_present)] + gaze_data1 + [tc_angle] + tc_pos + [label]
                     
                 else:
                     label = 'No-face-detected'
                     num_faces = 0; tc_present = 0;
-                    print('%s, %s'%(str(timestamp), label))
+                    print('%s, %06d, %s'%(str(timestamp), frame_counts[3], label))
                     write_line = [timestamp, str(frame_counts[3]).zfill(6), num_faces, tc_present, None, None, None, None, None, None, None, None, label]
                 
                 if write_image_data:
