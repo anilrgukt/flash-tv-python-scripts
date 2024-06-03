@@ -101,8 +101,6 @@ flash_tv = FLASHtv(family_id='123', data_path='/home/'+os.getlogin()+'/dmdm2023/
 log_file = [log_path, frame_counter]
 
 # TO ADD
- # corrent the phi, theta for rotation 
- # add gaze draw with save img
  # add rotate to find TC
  # add args for variables
  # add frame input send
