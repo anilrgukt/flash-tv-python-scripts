@@ -221,4 +221,34 @@ def correct_rotation(a, tc_angle):
     
     return [ns0, ns1, a[2]]
 
+def make_directories(save_path, famid, frames_path, frames_save_path):
 
+    if not os.path.exists(frames_save_path):
+        os.makedirs(frames_save_path)
+
+    if not os.path.exists(frames_path):
+        os.makedirs(frames_path)
+    else:
+        if len(os.listdir(frames_path)) > 0:
+            file_ls = next(os.walk(save_path))[1]
+            file_ls_ = []
+            for f in file_ls: 
+                if f.startswith(str(famid)+'_frames'):
+                    file_ls_.append(f)
+            
+            f_ = None
+            for i, f in enumerate(file_ls_):
+                f_path = os.path.join(save_path, f)
+                if len(f_path) > 0:
+                    continue
+                else:
+                    f_ = f
+            
+            if f_ is None:
+                frames_path = os.path.join(save_path, str(famid)+'_frames_'+str(i+2))
+                frames_save_path = os.path.join(save_path, str(famid)+'_test_res_'+str(i+2))
+                
+                os.makedirs(frames_path)
+                os.makedirs(frames_save_path)    
+                
+    return frames_path, frames_save_path

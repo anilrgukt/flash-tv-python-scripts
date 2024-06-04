@@ -18,7 +18,7 @@ import numpy as np
 # custom libs
 from flash_main import FLASHtv  
 
-from utils.flash_runtime_utils import check_face_presence, cam_id, write_log_file, correct_rotation
+from utils.flash_runtime_utils import check_face_presence, cam_id, write_log_file, correct_rotation, make_directories
 from utils.visualizer import draw_rect_ver, draw_gz
 
 def frame_write(q, frm_count):
@@ -87,26 +87,34 @@ def frame_write(q, frm_count):
     cap.release()
     time.sleep(3)
     cv2.destroyAllWindows()
-
+        
 # super variables 
 write_image_data = True
 rotate_to_find_tc = False
 
-frames_path = '/home/'+os.getlogin()+'/dmdm2023/data/tmp_frames'
-frames_save_path = '/home/'+os.getlogin()+'/dmdm2023/data/tmp_frames_res'
-log_path = '/home/'+os.getlogin()+'/dmdm2023/data/tmp.txt'
-log_path_reg = '/home/'+os.getlogin()+'/dmdm2023/data/tmp_reg.txt'
-log_path_rot = '/home/'+os.getlogin()+'/dmdm2023/data/tmp_rot.txt'
+famid = 123
+
+save_path = '/home/'+os.getlogin()+'/dmdm2023/data'
+frames_path = os.path.join(save_path, str(famid)+'_frames')
+frames_save_path = os.path.join(save_path, str(famid)+'_test_res') # '/media/FLASH_SSD/525_test_res/'
+frames_path, frames_save_path = make_directories(save_path, famid, frames_path, frames_save_path)
+
+
+tmp_fname = str(datetime.now().strftime("%Y-%m-%d %H-%M-%S"))
+tmp_fname = '_'.join(tmp_fname.split(' '))
+
+log_path = os.path.join(save_path, str(famid) + '_flash_log_'+tmp_fname+'.txt')
+log_path_reg = os.path.join(save_path, str(famid) + '_flash_log_'+tmp_fname+'_reg.txt')
+log_path_rot = os.path.join(save_path, str(famid) + '_flash_log_'+tmp_fname+'_rot.txt') 
+
 frame_counter = 1
 
-flash_tv = FLASHtv(family_id='123', data_path='/home/'+os.getlogin()+'/dmdm2023/data', frame_res_hw=None, output_res_hw=None)
+flash_tv = FLASHtv(family_id=str(famid), data_path=save_path, frame_res_hw=None, output_res_hw=None)
 log_file = [log_path, frame_counter]
 
 # TO ADD
- # add reg, rot log txts
  # add rotate to find TC
  # add args for variables
- # add timestamp log filenames
  # add frame input from txt option
  
 # TO TEST
@@ -142,6 +150,8 @@ while True:
     
     try:
         log_lines = []
+        log_lines_rot = []
+        log_lines_reg = []
         while True:
             if (batch_count+1) % 100 == 0: # to capture the time for frame capture
                 if batch_write:
@@ -207,10 +217,9 @@ while True:
                         gaze_data2 = list(o2[0]) + [e2[0][0]]
                         tc_angle = tc_bbox['angle']
                         
-                        if abs(tc_angle)>=30:
-                            #print('face rotation tranform!')
-                            gaze_data1 = correct_rotation(gaze_data1, tc_angle)
-                            gaze_data2 = correct_rotation(gaze_data2, tc_angle)
+                        #print('face rotation tranform!')
+                        gaze_data1_rot = correct_rotation(gaze_data1, tc_angle) if abs(tc_angle)>=30 else gaze_data1
+                        gaze_data2_rot = gaze_data2 #correct_rotation(gaze_data2, tc_angle) if abs(tc_angle)>=30 else gaze_data2
                             
                         tc_pos = [tc_bbox['top'], tc_bbox['left'], tc_bbox['bottom'], tc_bbox['right']]
                         print('%s, %06d, %.3f, %.3f, %s'%(str(timestamp), frame_counts[3], gaze_data1[0], gaze_data1[1], label))
@@ -218,11 +227,17 @@ while True:
                         #write the gaze no det logs
                         label = 'Gaze-no-det'
                         gaze_data1 = [None]*3; gaze_data2 = [None]*3;
+                        gaze_data1_rot = [None]*3; gaze_data2_rot = [None]*3;
                         tc_pos = [None]*4; tc_angle = None
                         
                         print('%s, %06d, %s, %s, %s'%(str(timestamp), frame_counts[3], gaze_data1[0], gaze_data1[1], label))
                     
                     write_line = [timestamp, str(frame_counts[3]).zfill(6), num_faces, int(tc_present)] + gaze_data1 + [tc_angle] + tc_pos + [label]
+                    write_line_rot = [timestamp, str(frame_counts[3]).zfill(6), num_faces, int(tc_present)] + gaze_data1_rot + [tc_angle] + tc_pos + [label]
+                    write_line_reg = [timestamp, str(frame_counts[3]).zfill(6), num_faces, int(tc_present)] + gaze_data2 + [tc_angle] + tc_pos + [label]
+                    
+                    log_lines_rot.append(write_line_rot)
+                    log_lines_reg.append(write_line_reg)
                     
                 else:
                     label = 'No-face-detected'
@@ -236,13 +251,16 @@ while True:
                         _, _ = draw_gz(frame_1080p_ls[tc_id], np.array(gaze_data1).reshape(1,3), tc_bbox, save_path, gz_label=None, write_img=True, scale=[480, 854])
                     else:
                         _ = draw_rect_ver(frame_1080p_ls[1], frame_bbox_ls[1], None, save_path, write_img=True, scale=[480, 854])
-                        #if num_faces>0:
-                        #else:
                     
                 log_lines.append(write_line)
                 if len(log_lines)==5:
                     write_log_file(log_path, log_lines)
+                    write_log_file(log_path_rot, log_lines_rot)
+                    write_log_file(log_path_reg, log_lines_reg)
+                    
                     log_lines = []
+                    log_lines_rot = []
+                    log_lines_reg = []
             else:
                 if qempty_start is None:
                         qempty_start = time.time()
