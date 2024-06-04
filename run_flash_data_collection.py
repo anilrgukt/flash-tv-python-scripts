@@ -95,15 +95,19 @@ rotate_to_find_tc = False
 frames_path = '/home/'+os.getlogin()+'/dmdm2023/data/tmp_frames'
 frames_save_path = '/home/'+os.getlogin()+'/dmdm2023/data/tmp_frames_res'
 log_path = '/home/'+os.getlogin()+'/dmdm2023/data/tmp.txt'
+log_path_reg = '/home/'+os.getlogin()+'/dmdm2023/data/tmp_reg.txt'
+log_path_rot = '/home/'+os.getlogin()+'/dmdm2023/data/tmp_rot.txt'
 frame_counter = 1
 
 flash_tv = FLASHtv(family_id='123', data_path='/home/'+os.getlogin()+'/dmdm2023/data', frame_res_hw=None, output_res_hw=None)
 log_file = [log_path, frame_counter]
 
 # TO ADD
+ # add reg, rot log txts
  # add rotate to find TC
  # add args for variables
- # add frame input send
+ # add timestamp log filenames
+ # add frame input from txt option
  
 # TO TEST
  # real time 
