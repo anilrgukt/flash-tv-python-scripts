@@ -17,6 +17,7 @@ import numpy as np
 
 # custom libs
 from flash_main import FLASHtv  
+from utils.rotate_frame import rotate_frame
 
 from utils.flash_runtime_utils import check_face_presence, cam_id, write_log_file, correct_rotation, make_directories
 from utils.visualizer import draw_rect_ver, draw_gz
@@ -90,7 +91,7 @@ def frame_write(q, frm_count):
         
 # super variables 
 write_image_data = True
-rotate_to_find_tc = False
+rotate_to_find_tc = True
 
 famid = 123
 
@@ -107,9 +108,11 @@ log_path = os.path.join(save_path, str(famid) + '_flash_log_'+tmp_fname+'.txt')
 log_path_reg = os.path.join(save_path, str(famid) + '_flash_log_'+tmp_fname+'_reg.txt')
 log_path_rot = os.path.join(save_path, str(famid) + '_flash_log_'+tmp_fname+'_rot.txt') 
 
-frame_counter = 1
+num_identities = 4
+flash_tv = FLASHtv(family_id=str(famid), num_identities=num_identities, data_path=save_path, frame_res_hw=None, output_res_hw=None)
+rot_frame = rotate_frame()
 
-flash_tv = FLASHtv(family_id=str(famid), data_path=save_path, frame_res_hw=None, output_res_hw=None)
+frame_counter = 1
 log_file = [log_path, frame_counter]
 
 # TO ADD
@@ -164,11 +167,17 @@ while True:
             # if no face is detected for 1500 secs () duration then fall back to stand by mode    
             stand_by_mode_check =  datetime.now() - face_seen_last_time
             if stand_by_mode_check.total_seconds() >= 1500:
+                log_file[1] = frame_counter
                 stop_capture = True
                 time.sleep(5)
                 p1.join()
                 del q
                 break
+            
+            for idx in range(num_identities):
+                time_diff = datetime.now() - flash_tv.fv.gal_updated_time[idx]
+                if time_diff.total_seconds() >= 150.0:
+                    flash_tv.fv.gal_update[idx] = True
             
             if not q.empty():
                 qempty_start = None
@@ -190,16 +199,25 @@ while True:
                 frame_1080p_ls = [cv2.cvtColor(img1080, cv2.COLOR_BGR2RGB) for img1080 in frame_1080p_ls]
                 frame_608p_ls = [cv2.resize(img1080, (608,342)) for img1080 in frame_1080p_ls]
                 
-                frame_1080p_ls = [frame_1080p_ls[3],frame_1080p_ls[4]]
+                frame_1080p_ls = [frame_1080p_ls[3],frame_1080p_ls[4]] # analyze only two images cause of real-time constraints
                 frame_608p_ls = [frame_608p_ls[3],frame_608p_ls[4]]
                 
                 timestamp = frame_stamps[3]
                 
                 # Analyze the set of frames
                 if rotate_to_find_tc:
-                    tmp=10
+                    img1, img2 = frame_1080p_ls
+                    frame_bbox_ls = [flash_tv.run_detector(img1[:,:,::-1])]
+                    
+                    img2 = rot_frame.rotate(img2)
+                    bbox2 = flash_tv.run_detector(img2[:,:,::-1], now_threshold=0.11)
+                    bbox2 = rot_frame.rotate_transform(bbox2) if rot_frame.rotate_flip>=0 else bbox2
+                    frame_bbox_ls.append(bbox2)
                 else:
                     frame_bbox_ls = [flash_tv.run_detector(img[:,:,::-1]) for img in frame_1080p_ls]
+                    rot_frame.rotate_count = 0
+                    rot_frame.rotate_count_tc = 0
+                    rot_frame.rotate_flip = False
                 
                 if any(frame_bbox_ls):
                     face_seen_last_time = datetime.now()
@@ -241,9 +259,14 @@ while True:
                     
                 else:
                     label = 'No-face-detected'
-                    num_faces = 0; tc_present = 0;
+                    num_faces = 0; tc_present = 0; tc_id = -1;
                     print('%s, %06d, %s'%(str(timestamp), frame_counts[3], label))
                     write_line = [timestamp, str(frame_counts[3]).zfill(6), num_faces, tc_present, None, None, None, None, None, None, None, None, label]
+                
+                if rotate_to_find_tc:
+                    num_faces_frame2 = len(frame_bbox_ls[1])
+                    tc_present_frame2 = tc_id == 2
+                    rot_frame.update(tc_present_frame2, num_faces_frame2)
                 
                 if write_image_data:
                     save_path = os.path.join(frames_save_path, str(frame_counts[3]).zfill(6) + '.png')

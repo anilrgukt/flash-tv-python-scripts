@@ -1,5 +1,5 @@
 import os
-import datetime
+from datetime import datetime
 
 import torch
 import cv2
@@ -29,7 +29,7 @@ def load_pretrained_model(architecture='ir_101'):
 
 
 class FLASHFaceVerification():
-    def __init__(self, verification_threshold=0.436, gal_add_threshold=0.3, embedding_size=512, img_size=112):
+    def __init__(self, num_identities, verification_threshold=0.436, gal_add_threshold=0.3, embedding_size=512, img_size=112):
         self.model = load_pretrained_model('ir_101')
         self.model.cuda()
         self.model.eval()
@@ -38,6 +38,11 @@ class FLASHFaceVerification():
         self.gal_threshold = gal_add_threshold
         self.emb_size = embedding_size
         self.img_size = img_size
+        self.num_identities = num_identities
+        
+        # gal update variables
+        self.gal_update = [True]*num_identities
+        self.gal_updated_time = [datetime.now() for i in range(num_identities)]
 
     def to_input(self, rgb_image):
         #np_img = np.array(pil_rgb_image)
@@ -82,13 +87,13 @@ class FLASHFaceVerification():
             
         return det_emb, detFacesLog
     
-    def convert_embedding_faceid(self, ref_features, test_features, gal_update, mean=0):
+    def convert_embedding_faceid(self, ref_features, test_features, mean=0):
         dist = dist_mat(ref_features, test_features, mean) # outputs numDET x numGT
         #gal_add_thrshld = 0
         #gal_update = [True, True, True]
         
         dist_cmp = np.array([])
-        num_identities = 4
+        num_identities = self.num_identities
         if dist.shape[0]>0:
             dist_res = np.copy(dist) - self.threshold
             dist_res[dist_res>0] = 0
@@ -104,7 +109,7 @@ class FLASHFaceVerification():
         gt_idxs = [-4,-3,-2]
         pred_idxs = []
         
-        gal_updated_time = [None, None, None, None]
+        #gal_updated_time = [None, None, None, None]
         for i in range(dist_cmp.shape[0]):
             di = dist_cmp[i]
             idx = di.argmax()
@@ -113,14 +118,16 @@ class FLASHFaceVerification():
                 idxs.remove(idx)
                 pred_idxs.append(idx)
                 
-                if idx<3 and di[idx]>self.gal_threshold and gal_update[idx]:
-                    gt_embedding[gt_idxs[idx],:] = test_features[i]
-                    gal_updated_time[idx] = datetime.now()
+                if idx<3 and di[idx]>self.gal_threshold and self.gal_update[idx]:
+                    ref_features[gt_idxs[idx],:] = test_features[i]
+                    self.gal_update[idx] = False
+                    self.gal_updated_time[idx] = datetime.now()
+                    print('Updated gallery face at idx:', idx, 'at', self.gal_updated_time[idx].time())
                     #pass
             else:
                 pred_idxs.append(4)
 	 
-        return pred_idxs, ref_features, gal_updated_time
+        return pred_idxs, ref_features
 		
         
 
