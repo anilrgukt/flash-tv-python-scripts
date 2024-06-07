@@ -92,7 +92,6 @@ def frame_write(q, frm_count):
 # super variables 
 write_image_data = True
 rotate_to_find_tc = True
-
 famid = 123
 
 save_path = '/home/'+os.getlogin()+'/dmdm2023/data'

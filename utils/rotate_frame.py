@@ -16,8 +16,8 @@ class rotate_frame():
         self.rotate_status = 0
         self.quad = None
         
-    def rotate(img2):
-        self.rotate_flip, self.quad = rotate_bool[self.rotate_status]
+    def rotate(self,img2):
+        self.rotate_flip, self.quad = self.rotate_bool[self.rotate_status]
                     
         if self.rotate_flip >= 0:
             if self.rotate_flip:
@@ -32,7 +32,7 @@ class rotate_frame():
         self.rotate_count += 1
         return img2
     
-    def update(tc_present, num_faces):
+    def update(self,tc_present, num_faces):
         #if 0 in idxs:
         if self.rotate_flip<0:
             if not tc_present: # tc not found in 2nd frame
@@ -45,7 +45,7 @@ class rotate_frame():
         return None
             
     
-    def rotate_transform(bbox_ls):
+    def rotate_transform(self,bbox_ls):
         new_bbox_ls = []
         rotate_angle = self.rotate_angle
         quad = self.quad
