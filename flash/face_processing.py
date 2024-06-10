@@ -122,7 +122,7 @@ class FaceModelv4():
             face_img = resize(face_img, (self.face_size, self.face_size))
             face_img = np.uint8(255*face_img)        
         
-        return face_img, angle
+        return face_img, angle, curr_landmarks-crop
         
     def get_normalized_face(self, face_img, pts5=None, face=True):
         

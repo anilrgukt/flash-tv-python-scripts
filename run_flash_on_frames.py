@@ -25,18 +25,21 @@ from utils.visualizer import draw_rect_ver, draw_gz
 # super variables 
 write_image_data = True
 rotate_to_find_tc = True
-famid = 123
+famid = sys.argv[1]
+
 
 famid = str(famid)
-fname_log = famid + '_flash_logv9n.txt'
-fname_log_read = famid + '_flash_log_sub_sort.txt'
+#frames_read_path = '/home/flashsys007/code_test/frames_data/'+famid+'_old_data/'+famid+'_frames'
+frames_read_path = '/media/flashsys007/FLASH_SSD/'+famid+'_frames'
+#fname_log = famid + '_flash_logv9n.txt'
+fname_log_read = '/home/flashsys007/code_test/flash_old_logs/txt_logs/'+famid+'_flash_log_sub_sort.txt'
 a = open(fname_log_read,'r')
 q = a.readlines()
 q = [line.strip() for line in q]
 q = q[::-1]
 
 
-save_path = '/home/'+os.getlogin()+'/dmdm2023/data'
+save_path = '/home/'+os.getlogin()+'/code_test/data'
 frames_path = os.path.join(save_path, str(famid)+'_frames')
 frames_save_path = os.path.join(save_path, str(famid)+'_test_res') # '/media/FLASH_SSD/525_test_res/'
 frames_path, frames_save_path = make_directories(save_path, famid, frames_path, frames_save_path)
@@ -59,6 +62,11 @@ log_file = [log_path, frame_counter]
 frame_counter = log_file[1] 
 log_path = log_file[0]
 face_seen_last_time = datetime.now()
+
+# PROCESS the QUEUE
+batch_count = 0
+time_batch_start = time.time()
+batch_write = True
         
 log_lines = []
 log_lines_rot = []
@@ -71,37 +79,38 @@ while True:
             print('############################################################')
             time_batch_start = time.time()
         batch_write = False    
-    
-    # if no face is detected for 1500 secs () duration then fall back to stand by mode    
-    stand_by_mode_check =  datetime.now() - face_seen_last_time
-    if stand_by_mode_check.total_seconds() >= 1500:
-        log_file[1] = frame_counter
-        stop_capture = True
-        time.sleep(5)
-        p1.join()
-        del q
-        break
-    
+
     for idx in range(num_identities):
         time_diff = datetime.now() - flash_tv.fv.gal_updated_time[idx]
         if time_diff.total_seconds() >= 150.0:
             flash_tv.fv.gal_update[idx] = True
     
-    if not q.empty():
-        qempty_start = None
-        batch_data = q.get() # image frames, counter, time-stamps
+    if len(q)>0:
+        data_line = q.pop()
+        data_line = data_line.split(' ')
+        datetime_ = data_line[0] + ' ' + data_line[1]
+        time_stamp = datetime.strptime(datetime_,'%Y-%m-%d %H:%M:%S.%f')
+        frame_num = int(data_line[2])
+    
+        imgv1_1 = cv2.imread(os.path.join(frames_read_path,str(frame_num).zfill(6)+'.png'))
+        imgv1_2 = cv2.imread(os.path.join(frames_read_path,str(frame_num+1).zfill(6)+'.png'))
+        
+        #print(time_stamp, frame_num, imgv1_1.shape, imgv1_2.shape)
+        batch7_list = [[imgv1_1, frame_num, time_stamp] for i in range(7)]
+        batch7_list[4][0]  = imgv1_2
     
         batch_count+=1 
         batch_write = True
         
-        frame_1080p_ls = [b[0] for b in batch_data]
-        frame_counts = [b[1] for b in batch_data]
-        frame_stamps = [b[2] for b in batch_data]
-    
+        frame_1080p_ls = [b[0] for b in batch7_list]
+        frame_counts = [b[1] for b in batch7_list]
+        frame_stamps = [b[2] for b in batch7_list]
+        
         frame_counter = frame_counts[-1]
         tdet = time.time()
         if write_image_data:
-            tmp = [cv2.imwrite(os.path.join(frames_path, str(frame_counts[k]).zfill(6)+'.png'), frame_1080p_ls[k]) for k in range(3,5)]
+            tmp = 10
+            #tmp = [cv2.imwrite(os.path.join(frames_path, str(frame_counts[k]).zfill(6)+'.png'), frame_1080p_ls[k]) for k in range(3,5)]
             del tmp        
         
         frame_1080p_ls = [cv2.cvtColor(img1080, cv2.COLOR_BGR2RGB) for img1080 in frame_1080p_ls]
@@ -132,10 +141,23 @@ while True:
             frame_bbox_ls =  [flash_tv.run_verification(img[:,:,::-1], bbox_ls) for img, bbox_ls in zip(frame_1080p_ls, frame_bbox_ls)] 
             
             # perform gaze estimation if the child is there
-            tc_present, gz_data, tc_bbox, tc_id = flash_tv.run_gaze(frame_1080p_ls, frame_bbox_ls)
+            tc_present, gz_data, tc_bboxs, tc_id, tc_imgs = flash_tv.run_gaze(frame_1080p_ls, frame_bbox_ls)
             num_faces = 0 if tc_id<0 else len(frame_bbox_ls[tc_id])
-            
+
             if tc_present:
+                tc_bbox = tc_bboxs[0]
+                asdf = 0
+                for tc in tc_imgs:
+                    lmarks = tc_bboxs[asdf]['new_lmrks']
+                    for l in range(lmarks.shape[0]):
+                        color = (0, 0, 255)
+                        if l == 0 or l == 3:
+                            color = (0, 255, 0)
+                        cv2.circle(tc, (lmarks[l,0], lmarks[l,1]), 1, color, 2)
+                    
+                    #cv2.imwrite('../check_tc_dir/'+str(frame_num).zfill(6)+'_'+str(asdf)+'.png', tc)
+                    asdf += 1
+
                 label = 'Gaze-det'
                 #write the gaze and bbx logs
                 o1, e1, o2, e2 = gz_data
@@ -192,3 +214,5 @@ while True:
             log_lines = []
             log_lines_rot = []
             log_lines_reg = []
+    else:
+        break

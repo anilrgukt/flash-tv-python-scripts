@@ -71,17 +71,20 @@ class FLASHtv():
         tc_id = -1
         tc_frame_id = 0
         for img, bbox_ls in zip(frame_ls, frame_bbox_ls):
-            img_cv1080 = img[:,:,::-1]
+            #img_cv1080 = img[:,:,::-1]
             
             tc_frame_id += 1
             for bbx in bbox_ls:
                 if bbx['idx'] == 0: # target child ID
                     bbx_ = Bbox(bbx)
-                    face, bbx_ = self.gaze_face_processing.crop_face_from_frame(img_cv1080, bbx_)
-                    face, lmarks = self.gaze_face_processing.resize_face(face, bbx_)
-                    face_rot, angle = self.gaze_face_processing.rotate_face(face, lmarks, angle=None)
+                    face, bbx_ = self.gaze_face_processing.crop_face_from_frame(img, bbx_) # rgb
+                    face, lmarks = self.gaze_face_processing.resize_face(face, bbx_) # rgb
+                    face_rot, angle, lmrks = self.gaze_face_processing.rotate_face(face, lmarks, angle=None)
                     bbx['angle'] = angle
-                    
+                    bbx['new_lmrks'] = lmarks
+                    #print(bbx_.return_dict())
+                    #print(lmarks)
+                    #print(angle)
                     #tc_faces.append(face_rot)
                     tc_face = face_rot
                     tc_bbx = bbx
@@ -92,7 +95,7 @@ class FLASHtv():
         
         tc_present = False        
         gz_data = None
-        tc_bbx = None
+        #tc_boxs = None
         
         if len(tc_imgs)>0:
             tc_present = True
@@ -110,4 +113,4 @@ class FLASHtv():
             gz_data = [o1,e1,o2,e2]
             tc_bbx = tc_boxs[0]
             
-        return tc_present, gz_data, tc_bbx, tc_id
+        return tc_present, gz_data, tc_boxs, tc_id, tc_imgs
