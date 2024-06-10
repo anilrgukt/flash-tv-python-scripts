@@ -146,9 +146,11 @@ while True:
 
             if tc_present:
                 tc_bbox = tc_bboxs[0]
-                asdf = 0
+                
+                # check tc image and plot land marks
+                co = 0
                 for tc in tc_imgs:
-                    lmarks = tc_bboxs[asdf]['new_lmrks']
+                    lmarks = tc_bboxs[co]['new_lmrks']
                     for l in range(lmarks.shape[0]):
                         color = (0, 0, 255)
                         if l == 0 or l == 3:
@@ -156,7 +158,7 @@ while True:
                         cv2.circle(tc, (lmarks[l,0], lmarks[l,1]), 1, color, 2)
                     
                     #cv2.imwrite('../check_tc_dir/'+str(frame_num).zfill(6)+'_'+str(asdf)+'.png', tc)
-                    asdf += 1
+                    co += 1
 
                 label = 'Gaze-det'
                 #write the gaze and bbx logs

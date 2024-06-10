@@ -90,9 +90,14 @@ def frame_write(q, frm_count):
     cv2.destroyAllWindows()
         
 # super variables 
-write_image_data = True
+#write_image_data = True
+#rotate_to_find_tc = True
+#famid = 123
+
+famid = int(sys.argv[1])
+save_path = str(sys.argv[2])
+write_image_data = True if sys.argv[3]=='save-image' else False
 rotate_to_find_tc = True
-famid = 123
 
 save_path = '/home/'+os.getlogin()+'/dmdm2023/data'
 frames_path = os.path.join(save_path, str(famid)+'_frames')
@@ -223,10 +228,11 @@ while True:
                     frame_bbox_ls =  [flash_tv.run_verification(img[:,:,::-1], bbox_ls) for img, bbox_ls in zip(frame_1080p_ls, frame_bbox_ls)] 
                     
                     # perform gaze estimation if the child is there
-                    tc_present, gz_data, tc_bbox, tc_id = flash_tv.run_gaze(frame_1080p_ls, frame_bbox_ls)
+                    tc_present, gz_data, tc_bboxs, tc_id, _ = flash_tv.run_gaze(frame_1080p_ls, frame_bbox_ls)
                     num_faces = 0 if tc_id<0 else len(frame_bbox_ls[tc_id])
                     
                     if tc_present:
+                        tc_bbox = tc_bboxs[0]
                         label = 'Gaze-det'
                         #write the gaze and bbx logs
                         o1, e1, o2, e2 = gz_data

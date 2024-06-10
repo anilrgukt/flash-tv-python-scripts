@@ -13,12 +13,8 @@ from utils.face_verification_utils import dist_mat, distance
 from . import net
 
 
-adaface_models = {
-    #'ir_50':"pretrained/adaface_ir50_ms1mv2.ckpt",
-    'ir_101':"/home/"+os.getlogin()+"/Desktop/FLASH_TV_v3/AdaFace/pretrained/adaface_ir101_webface12m.ckpt",
-}
 
-def load_pretrained_model(architecture='ir_101'):
+def load_pretrained_model(adaface_models, architecture='ir_101'):
     # load model and pretrained statedict
     assert architecture in adaface_models.keys()
     model = net.build_model(architecture)
@@ -29,8 +25,14 @@ def load_pretrained_model(architecture='ir_101'):
 
 
 class FLASHFaceVerification():
-    def __init__(self, num_identities, verification_threshold=0.436, gal_add_threshold=0.3, embedding_size=512, img_size=112):
-        self.model = load_pretrained_model('ir_101')
+    def __init__(self, model_path, num_identities, verification_threshold=0.436, gal_add_threshold=0.3, embedding_size=512, img_size=112):
+    
+        adaface_models = {
+                            #'ir_50':"pretrained/adaface_ir50_ms1mv2.ckpt",
+                            'ir_101': model_path, #"/home/"+os.getlogin()+"/Desktop/FLASH_TV_v3/AdaFace/pretrained/adaface_ir101_webface12m.ckpt",
+                        }
+
+        self.model = load_pretrained_model(adaface_models, 'ir_101')
         self.model.cuda()
         self.model.eval()
         

@@ -16,34 +16,36 @@ import torchvision.datasets as datasets
 import torchvision.models as models
 import torchvision.utils as vutils
 
-sys.path.insert(1, './gaze/')
+#sys.path.insert(1, './gaze/')
 from .gaze.model import GazeLSTM, GazeLSTMreg
 
-checkpoint_r50 = '/home/'+os.getlogin()+'/gaze_models/model_v3_best_Gaze360ETHXrtGene_r50.pth.tar'
-checkpoint_r50reg = '/home/'+os.getlogin()+'/gaze_models/model_v3_best_Gaze360ETHXrtGene_r50reg.pth.tar'
-cudnn.benchmark = True
-
-model_v = GazeLSTM()
-model = torch.nn.DataParallel(model_v).cuda()        
-checkpoint = torch.load(checkpoint_r50)
-print('epochs', checkpoint['epoch'])
-model.load_state_dict(checkpoint['state_dict'])
-model.eval()
-        
-modelregv = GazeLSTMreg()
-modelreg = torch.nn.DataParallel(modelregv).cuda()
-checkpoint = torch.load(checkpoint_r50reg)
-print('epochs', checkpoint['epoch'])
-modelreg.load_state_dict(checkpoint['state_dict'])
-modelreg.eval()
-
-gaze_models = [model, modelreg]
         
 
 class FLASHGazeEstimator():
-    def __init__(self, num_gaze_models=2, img_size=224, vid_res=7):
+    def __init__(self, ckpt1_r50, ckpt2_r50reg, num_gaze_models=2, img_size=224, vid_res=7):
+    
+        checkpoint_r50 = ckpt1_r50 #'/home/'+os.getlogin()+'/gaze_models/model_v3_best_Gaze360ETHXrtGene_r50.pth.tar'
+        checkpoint_r50reg = ckpt2_r50reg #'/home/'+os.getlogin()+'/gaze_models/model_v3_best_Gaze360ETHXrtGene_r50reg.pth.tar'
+        cudnn.benchmark = True
+
+        model_v = GazeLSTM()
+        model = torch.nn.DataParallel(model_v).cuda()        
+        checkpoint = torch.load(checkpoint_r50)
+        print('epochs', checkpoint['epoch'])
+        model.load_state_dict(checkpoint['state_dict'])
+        model.eval()
+                
+        modelregv = GazeLSTMreg()
+        modelreg = torch.nn.DataParallel(modelregv).cuda()
+        checkpoint = torch.load(checkpoint_r50reg)
+        print('epochs', checkpoint['epoch'])
+        modelreg.load_state_dict(checkpoint['state_dict'])
+        modelreg.eval()
+
+        #self.gaze_models = [model, modelreg]
+    
         #self.num_gaze_models = num_gaze_models      
-        self.gaze_models = gaze_models[0:num_gaze_models]  
+        self.gaze_models = [model, modelreg] #gaze_models[0:num_gaze_models]  
         self.img_size = img_size
         self.vid_res = vid_res
         
