@@ -171,7 +171,7 @@ class FLASHFaceVerification():
         for idx, face_img in enumerate(gt_faces_inp):
             #print(idx)
             gt_faces_inp[idx] = face_proc.get_normalized_face(face_img, face=False)
-            cv2.imwrite('./gt_faces_inp/'+str(idx).zfill(3)+'.png', gt_faces_inp[idx][:,:,::-1])
+            #cv2.imwrite('./gt_faces_inp/'+str(idx).zfill(3)+'.png', gt_faces_inp[idx][:,:,::-1])
             
         emb_gt1,n1 = self.model(self.to_input(gt_faces_inp[:24,:,:,:]))
         emb_gt1 = emb_gt1.cpu().detach().numpy()
